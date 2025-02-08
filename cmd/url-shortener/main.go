@@ -2,10 +2,14 @@ package main
 
 import (
 	"UrlShort/internal/config"
+	mwLogger "UrlShort/internal/http-server/middleware/logger"
 	"UrlShort/internal/lib/logger/sl"
 	"UrlShort/internal/storage/sqlite"
 	"log/slog"
 	"os"
+
+	"github.com/go-chi/chi/middleware"
+	"github.com/go-chi/chi/v5"
 )
 
 const (
@@ -22,7 +26,8 @@ func main() {
 	log = log.With(slog.String("env", cfg.Env))
 
 	log.Info("initializing server", slog.String("address", cfg.Address))
-	log.Debug("logger debug mode enabled")
+	log.Debug("debug message are enabled")
+	log.Error("error message are enabled")
 
 	storage, err := sqlite.New(cfg.StoragePath)
 	if err != nil {
@@ -31,8 +36,14 @@ func main() {
 	}
 
 	_ = storage
-	//init router
 
+	router := chi.NewRouter()
+
+	router.Use(middleware.RequestID)
+	router.Use(middleware.Logger)
+	router.Use(mwLogger.New(log))
+	router.Use(middleware.Recoverer)
+	router.Use(middleware.URLFormat)
 	//run server
 }
 

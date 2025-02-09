@@ -2,6 +2,7 @@ package main
 
 import (
 	"UrlShort/internal/config"
+	"UrlShort/internal/http-server/handlers/url/save"
 	mwLogger "UrlShort/internal/http-server/middleware/logger"
 	"UrlShort/internal/lib/logger/sl"
 	"UrlShort/internal/storage/sqlite"
@@ -45,6 +46,7 @@ func main() {
 	router.Use(middleware.Recoverer)
 	router.Use(middleware.URLFormat)
 	//run server
+	router.Post("/url", save.New(log, storage))
 }
 
 func setupLogger(env string) *slog.Logger {

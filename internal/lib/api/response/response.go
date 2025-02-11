@@ -3,6 +3,8 @@ package response
 import (
 	"fmt"
 	"strings"
+
+	"github.com/go-playground/validator"
 )
 
 type Response struct {
@@ -28,7 +30,11 @@ func Error(msg string) Response {
 	}
 }
 
-func ValidationError(errs validator.ValidationError) Response {
+type URLSaver interface {
+	SaveURL(URL, alias string) (int64, error)
+}
+
+func ValidationError(errs validator.ValidationErrors) Response {
 	var errMsg []string
 
 	for _, err := range errs {

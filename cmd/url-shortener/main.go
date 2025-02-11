@@ -7,6 +7,7 @@ import (
 	"UrlShort/internal/lib/logger/sl"
 	"UrlShort/internal/storage/sqlite"
 	"log/slog"
+	"net/http"
 	"os"
 
 	"github.com/go-chi/chi/middleware"
@@ -28,7 +29,6 @@ func main() {
 
 	log.Info("initializing server", slog.String("address", cfg.Address))
 	log.Debug("debug message are enabled")
-	log.Error("error message are enabled")
 
 	storage, err := sqlite.New(cfg.StoragePath)
 	if err != nil {
@@ -45,8 +45,22 @@ func main() {
 	router.Use(mwLogger.New(log))
 	router.Use(middleware.Recoverer)
 	router.Use(middleware.URLFormat)
-	//run server
+
 	router.Post("/url", save.New(log, storage))
+
+	log.Info("starting server", slog.String("address", cfg.Address))
+
+	srv := &http.Server{
+		Addr:         cfg.Address,
+		Handler:      router,
+		ReadTimeout:  cfg.HTTPServer.Timeout,
+		WriteTimeout: cfg.HTTPServer.Timeout,
+		IdleTimeout:  cfg.HTTPServer.IdleTimeout,
+	}
+	if err := srv.ListenAndServe(); err != nil {
+		log.Error("failed to start server")
+	}
+	log.Error("server stipped")
 }
 
 func setupLogger(env string) *slog.Logger {

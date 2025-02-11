@@ -1,36 +1,46 @@
 package save
 
 import (
-	"UrlShort/internal/lib/api/response"
-	"github.com/go-chi/render"
+	resp "UrlShort/internal/lib/api/response"
+	"UrlShort/internal/lib/logger/sl"
+	"UrlShort/internal/lib/random"
+	"UrlShort/internal/storage"
+	"errors"
+	"log/slog"
 	"net/http"
+
+	"github.com/go-playground/validator"
+
+	"github.com/go-chi/chi/middleware"
+	"github.com/go-chi/render"
 )
 
 type Request struct {
-	URL string `json:"url" validate:"required,url"`
+	URL   string `json:"url" validate:"required,url"`
 	Alias string `json:"alias,omitempty"`
 }
 
 type Response struct {
-	response.Response
+	resp.Response
 	Alias string `json:"alias,omitempty"`
 }
 
+//go:generate go run github.com/vektra/mockery --name=URLSaver
 type URLSaver interface {
-	SaveURL(urlToSave string, alias string) (int64, error)
+	SaveURL(URL, alias string) (int64, error)
 }
 
 const aliasLength = 4
 
-func New(log *slog.Logger, urlSaver URLSaver) http.HandlerFunc() {
+func New(log *slog.Logger, urlSaver URLSaver) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		const op = "handlers.url.save.New"
-		
+
 		log = log.With(
 			slog.String("op", op),
 			slog.String("request_id", middleware.GetReqID(r.Context())),
 		)
-		
+
 		var req Request
 
 		err := render.DecodeJSON(r.Body, &req)
@@ -55,7 +65,7 @@ func New(log *slog.Logger, urlSaver URLSaver) http.HandlerFunc() {
 			alias = random.NewRandomString(aliasLength)
 		}
 
-		id, err := urlSaver.SaveURL(req.Url, alias)
+		id, err := urlSaver.SaveURL(req.URL, alias)
 		if errors.Is(err, storage.ErrURLExists) {
 			log.Info("url already exists", slog.String("url", req.URL))
 
@@ -71,12 +81,12 @@ func New(log *slog.Logger, urlSaver URLSaver) http.HandlerFunc() {
 
 			return
 		}
-		
+
 		log.Info("url added", slog.Int64("id", id))
 
 		render.JSON(w, r, Response{
 			Response: resp.OK(),
-			Alias: alias,
+			Alias:    alias,
 		})
 	}
 }

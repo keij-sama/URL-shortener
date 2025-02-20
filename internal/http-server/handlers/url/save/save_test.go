@@ -42,6 +42,25 @@ func TestSaveHandler(t *testing.T) {
 			respError: "failed to add url",
 			mockError: errors.New("unexpected error"),
 		},
+		{
+			name:      "Empty Alias",
+			alias:     "",
+			url:       "https://google.com",
+			respError: "field Alias is required",
+		},
+		{
+			name:      "Empty URL",
+			alias:     "test_alias",
+			url:       "",
+			respError: "field URL is required",
+		},
+		{
+			name:      "Alias Conflict",
+			alias:     "existing_alias",
+			url:       "https://google.com",
+			respError: "alias already exists",
+			mockError: errors.New("alias already exists"),
+		},
 	}
 
 	for _, tc := range cases {

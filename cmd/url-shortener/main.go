@@ -2,6 +2,8 @@ package main
 
 import (
 	"UrlShort/internal/config"
+	"UrlShort/internal/http-server/handlers/redirect"
+	"UrlShort/internal/http-server/handlers/url/delete"
 	"UrlShort/internal/http-server/handlers/url/save"
 	mwLogger "UrlShort/internal/http-server/middleware/logger"
 	"UrlShort/internal/lib/logger/sl"
@@ -27,7 +29,11 @@ func main() {
 	log := setupLogger(cfg.Env)
 	log = log.With(slog.String("env", cfg.Env))
 
-	log.Info("initializing server", slog.String("address", cfg.Address))
+	log.Info(
+		"starting url-shortener",
+		slog.String("env", cfg.Env),
+		slog.String("version", "123"),
+	)
 	log.Debug("debug message are enabled")
 
 	storage, err := sqlite.New(cfg.StoragePath)
@@ -46,7 +52,16 @@ func main() {
 	router.Use(middleware.Recoverer)
 	router.Use(middleware.URLFormat)
 
-	router.Post("/url", save.New(log, storage))
+	router.Route("/url", func(r chi.Router) {
+		r.Use(middleware.BasicAuth("url-shortener", map[string]string{
+			cfg.HTTPServer.User: cfg.HTTPServer.Password,
+		}))
+
+		r.Post("/", save.New(log, storage))
+		r.Delete("/{alias}", delete.New(log, storage))
+	})
+
+	router.Get("/{alias}", redirect.New(log, storage))
 
 	log.Info("starting server", slog.String("address", cfg.Address))
 
@@ -57,6 +72,7 @@ func main() {
 		WriteTimeout: cfg.HTTPServer.Timeout,
 		IdleTimeout:  cfg.HTTPServer.IdleTimeout,
 	}
+
 	if err := srv.ListenAndServe(); err != nil {
 		log.Error("failed to start server")
 	}

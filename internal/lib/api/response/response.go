@@ -30,10 +30,6 @@ func Error(msg string) Response {
 	}
 }
 
-type URLSaver interface {
-	SaveURL(URL, alias string) (int64, error)
-}
-
 func ValidationError(errs validator.ValidationErrors) Response {
 	var errMsg []string
 

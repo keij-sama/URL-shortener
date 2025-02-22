@@ -13,7 +13,7 @@ import (
 	"github.com/go-chi/render"
 )
 
-//go:generate go run github.com/vektra/mockery/v2@v2.28.2 --name=URLDeleter
+//go:generate go run github.com/vektra/mockery/v2@v2.52.3 --name=URLDeleter --output=mocks
 type URLDeleter interface {
 	DeleteURL(alias string) error
 }
@@ -31,6 +31,7 @@ func New(log *slog.Logger, urlDeleter URLDeleter) http.HandlerFunc {
 		if alias == "" {
 			log.Info("alias is empty")
 
+			w.WriteHeader(http.StatusBadRequest)
 			render.JSON(w, r, response.Error("invalid request"))
 			return
 		}
@@ -39,12 +40,14 @@ func New(log *slog.Logger, urlDeleter URLDeleter) http.HandlerFunc {
 		if errors.Is(err, storage.ErrURLNotFound) {
 			log.Info("url not found", "alias", alias)
 
+			w.WriteHeader(http.StatusNotFound)
 			render.JSON(w, r, response.Error("not found"))
 			return
 		}
 		if err != nil {
 			log.Error("failed to delete url", sl.Err(err))
 
+			w.WriteHeader(http.StatusInternalServerError)
 			render.JSON(w, r, response.Error("internal error"))
 			return
 		}

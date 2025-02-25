@@ -7,7 +7,8 @@ import (
 )
 
 var (
-	ErrInvalidStatusOk = errors.New("invalid status code")
+	ErrInvalidStatusOk   = errors.New("invalid status code")
+	ErrInvalidStatusCode = errors.New("invalis status code")
 )
 
 func GetRedirect(url string) (string, error) {
@@ -23,12 +24,15 @@ func GetRedirect(url string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusFound {
-		return "", fmt.Errorf("%s: %w: %d", op, ErrInvalidStatusOk, resp.StatusCode)
+	if resp.StatusCode == http.StatusNotFound {
+		return "", ErrInvalidStatusCode
 	}
 
-	defer func() { _ = resp.Body.Close() }()
+	if resp.StatusCode != http.StatusFound {
+		return "", fmt.Errorf("%s: %w", op, ErrInvalidStatusOk)
+	}
 
 	return resp.Header.Get("Location"), nil
 }

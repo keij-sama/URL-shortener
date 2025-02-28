@@ -1,6 +1,8 @@
 module UrlShort
 
-go 1.22.2
+go 1.23
+
+toolchain go1.23.6
 
 require (
 	github.com/brianvoe/gofakeit/v6 v6.28.0
@@ -9,9 +11,12 @@ require (
 	github.com/go-chi/chi/v5 v5.2.1
 	github.com/go-chi/render v1.0.3
 	github.com/go-playground/validator v9.31.0+incompatible
+	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.3.0
 	github.com/ilyakaznacheev/cleanenv v1.5.0
+	github.com/keij-sama/gRPC_Project/protos v0.0.0-20250226205756-cc1da44c1b32
 	github.com/mattn/go-sqlite3 v1.14.24
 	github.com/stretchr/testify v1.10.0
+	google.golang.org/grpc v1.70.0
 )
 
 require (
@@ -47,8 +52,11 @@ require (
 	github.com/yalp/jsonpath v0.0.0-20180802001716-5cc68e5049a0 // indirect
 	github.com/yudai/gojsondiff v1.0.0 // indirect
 	github.com/yudai/golcs v0.0.0-20170316035057-ecda9a501e82 // indirect
-	golang.org/x/net v0.7.0 // indirect
-	golang.org/x/sys v0.7.0 // indirect
+	golang.org/x/net v0.35.0 // indirect
+	golang.org/x/sys v0.30.0 // indirect
+	golang.org/x/text v0.22.0 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20241202173237-19429a94021a // indirect
+	google.golang.org/protobuf v1.36.5 // indirect
 	gopkg.in/fsnotify.v1 v1.4.7 // indirect
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect

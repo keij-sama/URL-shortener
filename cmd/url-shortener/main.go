@@ -1,6 +1,7 @@
 package main
 
 import (
+	ssogrpc "UrlShort/internal/clients/sso/grpc"
 	"UrlShort/internal/config"
 	"UrlShort/internal/http-server/handlers/redirect"
 	"UrlShort/internal/http-server/handlers/url/delete"
@@ -8,6 +9,7 @@ import (
 	mwLogger "UrlShort/internal/http-server/middleware/logger"
 	"UrlShort/internal/lib/logger/sl"
 	"UrlShort/internal/storage/sqlite"
+	"context"
 	"log/slog"
 	"net/http"
 	"os"
@@ -35,6 +37,20 @@ func main() {
 		slog.String("version", "123"),
 	)
 	log.Debug("debug message are enabled")
+
+	ssoClient, err := ssogrpc.New(
+		context.Background(),
+		log,
+		cfg.Clients.SSO.Address,
+		cfg.Clients.SSO.Timeout,
+		cfg.Clients.SSO.RetriesCount,
+	)
+	if err != nil {
+		log.Error("failed to init sso client", sl.Err(err))
+		os.Exit(1)
+	}
+
+	ssoClient.IsAdmin(context.Background(), 1)
 
 	storage, err := sqlite.New(cfg.StoragePath)
 	if err != nil {
